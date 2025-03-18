@@ -1,0 +1,39 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Örnek film veri seti (güncellenmiş açıklamalar)
+movies = {
+    'title': ['Fast and Furious', 'The Matrix', 'Death Race', 'Cars', 'Mr. Robot', "Ready Player One"],
+    'description': [
+        'Fast and Furious is an action-packed movie that follows a street racer, Dominic Toretto, and his crew as they engage in high-speed car chases, heists, and battles against criminal organizations. It is centered around cars, speed, and family.',
+        'The Matrix is a science fiction film where a computer hacker, Neo, discovers that his reality is a simulated world created by machines. He joins a rebellion to free humanity from this virtual prison and explore themes of artificial intelligence, virtual reality, and existentialism.',
+        'Death Race is a dystopian action film set in a near-future prison where inmates participate in a deadly car race. Convicts must fight to survive and win freedom, blending high-speed racing with brutal combat in a post-apocalyptic world.',
+        'Cars is an animated adventure featuring Lightning McQueen, a rookie race car striving to prove himself in the world of professional racing. The movie highlights themes of friendship, determination, and the competitive world of car racing.',
+        'Mr. Robot is a techno-thriller TV series where a brilliant but unstable cybersecurity engineer, Elliot, gets involved in hacking operations to take down corrupt corporations. It explores themes of hacking, cybercrime, mental illness, and corporate greed.',
+        'Ready Player One is a science fiction film set in a dystopian future where people escape their harsh reality by entering the virtual world of the OASIS. Players embark on a treasure hunt within the game, facing challenges and uncovering secrets in a fully immersive digital universe.'
+    ]
+}
+
+# DataFrame'e dönüştürme
+df = pd.DataFrame(movies)
+
+# TF-IDF vektörleştirme
+tfidf = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf.fit_transform(df['description'])
+
+# Cosine Similarity hesaplama
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+# Film başlığına göre öneriler yapan fonksiyon
+def recommend_movies(title, cosine_sim, df):
+    idx = df[df['title'] == title].index[0]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:3]  # İlk 2 benzer filmi al
+    movie_indices = [i[0] for i in sim_scores]
+    return df['title'].iloc[movie_indices]
+
+# 'Cars' filmine göre öneriler
+recommendations = recommend_movies('Cars', cosine_sim, df)
+print("cars'a Benzer Filmler:\n", recommendations)
